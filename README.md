@@ -1,4 +1,4 @@
-This will become a group of calculators designed to calculate changes in pay for Resident doctors and Consultants across the UK.
+This will become a group of calculators designed to calculate changes in net and gross pay for Resident doctors and Consultants across the UK. It is intended for these calculators to take pensions, student loans and pay premia into account.
 
 As of yet, the only calculator that has been mostly finished is the English resident doctors calculator.
 
