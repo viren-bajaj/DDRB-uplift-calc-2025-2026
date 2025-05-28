@@ -48,15 +48,21 @@ ui <- bslib::page_fluid(
   titlePanel("Resident Doctor Pay Uplift Calculator - England 25/26"),
   sidebarLayout(
     sidebarPanel(
-	  width = 6,
+	  width = 4,
       h6(strong("Select Grade")),
 	  radioButtons("grade", label = NULL, choices = pay_scales$grade),
-      numericInput("gross_payA", "Total Pay (£)", value = 36616, min = 0, max = Inf),
+      numericInput("gross_payA", "Total Pay (£) (do not include locum pay)", value = 36616, min = 0, max = Inf),
 
       uiOutput("premia_selector"),
       
       h6(strong("London Weighting")),
 	  checkboxInput("is_London_weight", "Do you get London Weighting?", value = FALSE),
+		conditionalPanel(
+		condition = "input.is_London_weight == true",
+		selectInput("london_weighting", "London Weighting Band:",
+              choices = c("Fringe", "Outer", "Inner"),
+              selected = "Inner")
+		),
 	  h6(strong("Pension Options")),
       checkboxInput("is_under_StatePensionAge", "Are you under state pension age?", value = TRUE),
       conditionalPanel(
@@ -145,10 +151,18 @@ output$premia_selector <- renderUI({
   })
 
   observeEvent(input$calculate, {
-	#inputs			 
-    base_salary <- pay_scales %>% filter(grade == input$grade) %>% pull(base_salary)
+	#inputs	
+    get_london_weighting <- function(band) {
+    switch(band,
+         "Fringe" = 149,
+         "Outer"  = 527,
+         "Inner"  = 2162,
+         0)
+    }
+	
+	base_salary <- pay_scales %>% filter(grade == input$grade) %>% pull(base_salary)
     selected_premia <- sum(pay_premia %>% filter(type %in% input$flexible_pay_premia) %>% pull(f_premia))
-    selected_weight <- if (input$is_London_weight) 2162 else 0
+    selected_weight <- if (input$is_London_weight) get_london_weighting(input$london_weighting) else 0
     selected_ltft <- if (input$is_ltft) 1000 else 0
     ltft_percentage <- if (input$is_ltft) input$ltft_percentageA else 100
     ltft_hours <- if (input$is_ltft) input$ltft_hoursA else 40
@@ -334,8 +348,8 @@ output$premia_selector <- renderUI({
 
 	cat("\n=== Overall Uplift ===\n")
 		cat("Uplift to basic pay: ", round(basic_uplift,2), "%\n")																			  
-		cat("Uplift to gross pay (%): ", round(gross_uplift,2), "\n")
-		cat("Uplift to net pay (%): ", round(net_uplift,2), "\n")
+		cat("Uplift to gross pay: ", round(gross_uplift,2), "%\n")
+		cat("Uplift to net pay: ", round(net_uplift,2), "%\n")
 })  # <-- This closes renderPrint
 
 })  # <-- This closes observeEvent
