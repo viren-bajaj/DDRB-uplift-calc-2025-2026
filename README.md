@@ -5,11 +5,12 @@ As of yet, the only calculator that has been finished is the English resident do
 Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
 
 To do:
-1) add welsh, scottish and northern irish pay + banding as alternative pay structures. 
-2) Add the option to use scottish income taxes for english pay, 
-3) Add rest-of-UK tax for scottish pay (income tax is determined by where you live, not where you work).
+1) Add the outer london and fringe options to london weighting
+2) Add welsh, scottish and northern irish pay + banding as alternative pay structures. 
+3) Add the option to use scottish income taxes for english pay, 
+4) Add rest-of-UK tax for scottish pay (income tax is determined by where you live, not where you work).
 
-4) Make consultant calculators - will be easier once scottish tax toggle has been designed.
+5) Make consultant calculators - will be easier once scottish tax toggle has been designed.
 
 Further ideas:
 Make a pension projection tool for doctors. If done, I can't imagine designing anything that accounts for switching schemes.
