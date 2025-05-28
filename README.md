@@ -2,6 +2,8 @@ This will become a group of aclaculators designed to calculate changes in pay fo
 
 As of yet, the only calculator that has been finished is the English resident doctors calculator.
 
+Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
+
 To do:
 1) add welsh, scottish and norther irish pay + banding as alternative pay structures. 
 2) Add the option to use scottish income taxes for english pay, 
