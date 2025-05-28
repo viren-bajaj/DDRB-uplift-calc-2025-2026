@@ -1,6 +1,6 @@
 This will become a group of aclaculators designed to calculate changes in pay for Resident doctors and Consultants across the UK.
 
-As of yet, the only calculator that has been finished is the English resident doctors calculator.
+As of yet, the only calculator that has been mostly finished is the English resident doctors calculator.
 
 Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
 
