@@ -1,0 +1,22 @@
+CHANGELOG for English calc (changes since v1.0.0):
+
+v1.0.1 - 
+big fixes
+
+v1.0.2 -
+Added Scottish tax toggle (should've been a 1.x.0 update, but I didn't think about)
+
+v1.0.3 -
+bug fixes
+
+v1.1.0 - 
+main change:
+adds the option to use the calc if you don't know your gross pay, but do know your hours (calculates NROC allowances, weekend allowances and night enhancements (taking account of LTFT)).
+
+other:
+added version number into the title
+provides a link to explain in situations where pensionable pay is greater than gross pay
+catches null inputs in the gross income and ltft options - and throws an error message
+
+Produces an error message if you select LTFT but input hours such that your basic hours [total hours - enhanced hours] is significantly off from [LTFT Percentage *40] - but still lets you proceed
+Produces an error message if entered gross income is impossibly low given other options selected (e.g. LTFT allowance, pay premia, London weighting) - should not let the user proceed
