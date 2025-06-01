@@ -1,7 +1,8 @@
 CHANGELOG for English calc (changes since v1.0.0):
 
 v1.0.1 - 
-big fixes
+Added fringe and outer London weighting options.
+bug fixes
 
 v1.0.2 -
 Added Scottish tax toggle (should've been a 1.x.0 update, but I didn't think about)
@@ -14,6 +15,8 @@ main change:
 adds the option to use the calc if you don't know your gross pay, but do know your hours (calculates NROC allowances, weekend allowances and night enhancements (taking account of LTFT)).
 
 other:
+rather than using random code whose origin I cannot recall, I re-wrote it the samwe way I calculated rest-of-UK taxes. It know means if there are changes to tax codes (i.e. extra tax bands), I can handle it more easily.
+
 added version number into the title
 provides a link to explain in situations where pensionable pay is greater than gross pay
 catches null inputs in the gross income and ltft options - and throws an error message
