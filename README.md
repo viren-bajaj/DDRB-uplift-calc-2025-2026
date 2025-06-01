@@ -7,13 +7,22 @@ Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_p
 To do:
 
 ~~1) Add the outer london and fringe options to london weighting~~
-1) account for locum pay without accidentally uplifting it - this is harder than it sounds because how do you account for a user who includes it in their gross vs separately 
+
+1) account for locum pay without accidentally uplifting it - this is harder than it sounds because how do you account for a user who includes it in their gross vs separately
+
 ~~2) add options for users who don't know their gross pay, but do know thier hours~~
-2) Add welsh, scottish and northern irish pay + banding as alternative pay structures. 
+
+3) Add welsh, scottish and northern irish pay + banding as alternative pay structures.
+   
 ~~3) Add the option to use scottish income taxes for english pay,~~
-3) Add rest-of-UK tax for scottish pay (income tax is determined by where you live, not where you work).
+
+~~5) Add rest-of-UK tax for scottish pay (income tax is determined by where you live, not where you work).~~ (kind of done by adding a toggle for scottish taxes)
 
 4) Make consultant calculators.
+
+Issues: Scottish taxes seem to be universally hard to calculate - I have checked 3 other websites including gov.uk, a building society, and one other doctor pay calculator, none of us agree on scottish taxes, and gov.uk is the one that agrees the least.
+
+Other: as far as i can tell NROC allowance is calculated as 8% of basic salary, but what's unclear is how this plays in with LTFT. NHS employers has a "ready reckoner" for LTFT weekend and NROC (for 23/24 - although pay nodes have increased in England as of May 2025 , the terms for calculating NROC and weekend allowances have not changed) - it assumes that NROC allowance is pro-rata by the same percentage as weekend allowance. I think that might be wrong, but I'm not sure - so I have used the assumptioon in the "ready reckoner" too.
 
 Further ideas:
 Make a pension projection tool for doctors. If done, I can't imagine designing anything that accounts for switching schemes.
