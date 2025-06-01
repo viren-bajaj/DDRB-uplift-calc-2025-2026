@@ -22,7 +22,9 @@ To do:
 
 Issues: Scottish taxes seem to be universally hard to calculate - I have checked 3 other websites including gov.uk, a building society, and one other doctor pay calculator, none of us agree on scottish taxes, and gov.uk is the one that agrees the least.
 
-Other: as far as i can tell NROC allowance is calculated as 8% of basic salary, but what's unclear is how this plays in with LTFT. NHS employers has a "ready reckoner" for LTFT weekend and NROC (for 23/24 - although pay nodes have increased in England as of May 2025 , the terms for calculating NROC and weekend allowances have not changed) - it assumes that NROC allowance is pro-rata by the same percentage as weekend allowance. I think that might be wrong, but I'm not sure - so I have used the assumptioon in the "ready reckoner" too.
+Other: as far as i can tell NROC allowance is calculated as 8% of basic salary, but what's unclear is how this plays in with LTFT. NHS employers has a "ready reckoner" for LTFT weekend and NROC (for 23/24 - although pay nodes have increased in England as of May 2025 , the terms for calculating NROC and weekend allowances have not changed) - it assumes that NROC allowance is pro-rata by the same percentage as weekend allowance. I think it's possible to have a different on-call comittment to weekend comittment, but I have used the assumption in the "ready reckoner" regardless.
+
+The explanations for how to calculate allowances and such can be found here - https://www.nhsemployers.org/system/files/2023-02/NHS-Doctors-and-Dentists-in-Training-England-TCS-2016-VERSION-11.pdf
 
 Further ideas:
 Make a pension projection tool for doctors. If done, I can't imagine designing anything that accounts for switching schemes.
