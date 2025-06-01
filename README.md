@@ -1,6 +1,6 @@
 This will become a group of calculators designed to calculate changes in net and gross pay for Resident doctors and Consultants across the UK. It is intended for these calculators to take pensions, student loans and pay premia into account.
 
-As of yet, the only calculator that has been mostly finished is the English resident doctors calculator.
+As of yet, the only calculator that has been mostly finished is the English resident doctors calculator (2016 contract).
 
 Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
 
