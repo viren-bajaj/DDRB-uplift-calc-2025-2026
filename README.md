@@ -12,13 +12,13 @@ To do:
 
 ~~2) add options for users who don't know their gross pay, but do know thier hours~~
 
-3) Add welsh, scottish and northern irish pay + banding as alternative pay structures.
+2) Add welsh, scottish and northern irish pay + banding as alternative pay structures.
    
 ~~3) Add the option to use scottish income taxes for english pay,~~
 
 ~~5) Add rest-of-UK tax for scottish pay (income tax is determined by where you live, not where you work).~~ (kind of done by adding a toggle for scottish taxes)
 
-4) Make consultant calculators.
+3) Make consultant calculators.
 
 Issues: Scottish taxes seem to be universally hard to calculate - I have checked 3 other websites including gov.uk, a building society, and one other doctor pay calculator, none of us agree on scottish taxes, and gov.uk is the one that agrees the least.
 
