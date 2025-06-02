@@ -12,10 +12,10 @@ added a stacked bar chart to help visulaise what's changed
 bug fixes
 
 v1.1.0 - 
-main change:
+Main change:
 adds the option to use the calc if you don't know your gross pay, but do know your hours (calculates NROC allowances, weekend allowances and night enhancements (taking account of LTFT)).
 
-other:
+Other:
 rather than using random code whose origin I cannot recall, I re-wrote it the samwe way I calculated rest-of-UK taxes. It know means if there are changes to tax codes (i.e. extra tax bands), I can handle it more easily.
 
 added version number into the title
@@ -24,3 +24,16 @@ catches null inputs in the gross income and ltft options - and throws an error m
 
 Produces an error message if you select LTFT but input hours such that your basic hours [total hours - enhanced hours] is significantly off from [LTFT Percentage *40] - but still lets you proceed
 Produces an error message if entered gross income is impossibly low given other options selected (e.g. LTFT allowance, pay premia, London weighting) - should not let the user proceed
+
+
+v1.1.1 - 
+cleaned up flexible pay premia data and selection
+added more warnings to explain weird results (e.g. if you say you're full time, but use 32 basic hours and 8 enhanced hours. The sum of the enhanced hours, weekend allowance and  NROC allowance.  I think I have a better way to handle this but I need to check how pay is presented on pay slips (are 40  hours of which 8 are enhanced listed as 40 hrs +8hrs*0.37, or 32hrs + 8hrs*1.37))
+fixed a bug where (assuming you are ltft) if you were doing more frequent weekends a fulltime person, it would apply a multiplier to the fulltime weekend allowance - now if you do more frequent weeknds it doesn't pro-rata, it just uses the correct percentage.
+
+added some info to the ltft box
+added more null catching
+
+added a breakdown of what OOH pay is if you do not know your gross
+cleaned up some warnings
+changed the gross pay calculation (if gross not known) logic - no change in results, but it feels like the logic is more correct
