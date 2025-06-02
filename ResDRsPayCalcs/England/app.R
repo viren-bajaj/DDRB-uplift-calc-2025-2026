@@ -10,10 +10,10 @@ pay_scales <- data.frame(
 )
 
 pay_premia <- data.frame(
-  type = c("none", "GP", "Psych Core", "Psych HST (3 years)", "Psych HST (4 years)", "Academia", "Histopathology", 
+  type = c("Academia", "GP", "Psych Core", "Psych HST (3 years)", "Psych HST (4 years)", "Histopathology", 
            "EM/OMFS (3 years)", "EM/OMFS (4 years)", "EM/OMFS (5 years)", 
            "EM/OMFS (6 years)", "EM/OMFS (7 years)", "EM/OMFS (8 years)"),
-  f_premia = c(0, 10690, 4347, 4347, 3260, 5216, 5216, 8693, 6520, 5216, 4347, 3726, 3260)
+  f_premia = c(5216, 10690, 4347, 4347, 3260, 5216, 8693, 6520, 5216, 4347, 3726, 3260)
 )
 
 L_weight <- 2162
@@ -79,47 +79,52 @@ PG_THRESH <-21000
 
 # UI	
 ui <- bslib::page_fluid(
-  titlePanel("Resident Doctor Pay Uplift Calculator - England 25/26 v1.1.0"),
+  titlePanel("Resident Doctor Pay Uplift Calculator - England 25/26 v1.1.3"),
   sidebarLayout(
     sidebarPanel(
       width = 4,
       h6(strong("Select Grade")),
       radioButtons("grade", label = NULL, choices = pay_scales$grade),
-	  
-	  h6(strong("LTFT Options")),
+      
+      tagList(
+        h6(strong("LTFT Options")),
+        p("If you’re working less than full time (e.g. 80%), tick the box and fill in the fields below to adjust your uplift and weekend frequency correctly. Please be aware that LTFT calculations may be inaccurate",
+          class = "text-muted", style = "margin-top: -8px; margin-bottom: 8px; font-size: 0.9em;")
+      ),
       checkboxInput("is_ltft", "Are you less than full time?", value = FALSE),
       conditionalPanel(
         condition = "input.is_ltft == true",
         numericInput("ltft_percentageA", "LTFT Percentage (%) (100 if full time)", value = 100, min = 0, max = 100, step = 0.5),
-        numericInput("ltft_hoursA", "LTFT Total Hours (use 40 if Full time)", value = 40, min = 0, max = 56)
+        numericInput("ltft_hoursA", "LTFT Total Hours (use 40 if Full time)", value = 40, min = 0, max = 56),
+        uiOutput("ltft_hint_text")  #Tells the user what the calculator thinks their LTFT percent should be
       ),
-	  
+      
       h6(strong("Gross Income")),
-		checkboxInput("know_gross_income", "Do you know your gross income (excluding locums)?", value = TRUE),
-			conditionalPanel(
-				condition = "input.know_gross_income == true",
-				numericInput("gross_payA", "Total Pay (£)", value = 36616, min = 0)
-			),
-
-			conditionalPanel(
-				condition = "input.know_gross_income == false",
-					tagList(
-					numericInput("non_enhanced_hours", "Average total weekly hours", value = 40, min = 0, max = 56),
-					sliderInput("enhanced_hours", "how many of those hours are enhanced/OOH?",
-					            value = 8, min = 0, max = 56, step = 0.1),
-					
-					numericInput("weekend_freq", "Weekend Frequency (e.g. 1 in 6 = enter 6)", value = 6, min = 2),
-    
-						# Nested panel: only show if LTFT
-						conditionalPanel(
-							condition = "input.is_ltft == true",
-							numericInput("ft_weekend_freq", "Full-time Weekend Frequency (e.g. 1 in 5 = enter 5)", value = 5, min = 2)
-						),
-					checkboxInput("is_on_call_allowance", "Do you get an on-call allowance?", value = FALSE)
-    
-					
-					)
-			),
+      checkboxInput("know_gross_income", "Do you know your gross income (excluding locums)?", value = TRUE),
+      conditionalPanel(
+        condition = "input.know_gross_income == true",
+        numericInput("gross_payA", "Total Pay (£)", value = 36616, min = 0)
+      ),
+      
+      conditionalPanel(
+        condition = "input.know_gross_income == false",
+        tagList(
+          numericInput("non_enhanced_hours", "Average total weekly hours", value = 40, min = 0, max = 56, step = 0.25),
+          sliderInput("enhanced_hours", label = NULL,
+                      value = 8, min = 0, step = 0.25, max = 56),
+          
+          numericInput("weekend_freq", "If you work weekends, what is your avergae frequency? (e.g. 1 in 6 = enter 6). This can be a decimal number. Choose 9 or higher if you don't work weekends. If you only work one of Saturday or Sunday, it is still a full weekend.", value = 6, min = 1),
+          
+          # Nested panel: only show if LTFT
+          conditionalPanel(
+            condition = "input.is_ltft == true",
+            numericInput("ft_weekend_freq", "What is the Full-time Weekend Frequency for your rota? (e.g. 1 in 5 = enter 5).", value = 5, min = 1)
+          ),
+          checkboxInput("is_on_call_allowance", "Do you get an on-call allowance?", value = FALSE)
+          
+          
+        )
+      ),
       
       h6(strong("Tax Region")),
       checkboxInput("is_scotland", "Are you a Scottish taxpayer?", value = FALSE),
@@ -140,7 +145,7 @@ ui <- bslib::page_fluid(
         condition = "input.is_under_StatePensionAge == true",
         checkboxInput("is_opt_in_pension", "Are you opted in to the pension?", value = TRUE)
       ),
-            
+      
       h6(strong("Select Student Loan Plans You Repay")),
       checkboxGroupInput("plans", label = NULL,
                          choices = list(
@@ -155,8 +160,8 @@ ui <- bslib::page_fluid(
     ),
     mainPanel(
       verbatimTextOutput("salary_output"),
-	  uiOutput("pension_warning"),
-	  plotOutput("barplot_output")
+      uiOutput("pension_warning"),
+      plotOutput("barplot_output")
     )
   )
 )
@@ -166,12 +171,10 @@ server <- function(input, output, session) {
   #Flexible premia selector
   output$premia_selector <- renderUI({
     grade <- input$grade
-    common_choices <- c("none", "Academia")
-    if (grade %in% c("FY1", "FY2")) {
-      choices <- common_choices
+    choices <- if (grade %in% c("FY1", "FY2")) {
+      c("Academia")  # only academia allowed
     } else {
-      extra_choices <- setdiff(pay_premia$type, common_choices)
-      choices <- c(common_choices, extra_choices)
+      pay_premia$type
     }
     
     tagList(
@@ -180,7 +183,7 @@ server <- function(input, output, session) {
         h6(strong("Flexible Pay Premia Type")),
         tags$span(
           bs_icon("info-circle", size = "1.25em", class = "text-primary"),
-          title = "You must deselect 'none' to choose a premium.\n If you reselect 'none', it will deselect all other options.\nYou can select two options, but only if one of them is Academia.",
+          title = "You can select up to two options, but if selecting two options, one must be 'Academia'. If nothing is selected, no premia is applied.",
           `data-bs-toggle` = "tooltip",
           `data-bs-placement` = "right",
           style = "cursor: pointer;"
@@ -190,39 +193,51 @@ server <- function(input, output, session) {
         "flexible_pay_premia",
         label = NULL,
         choices = choices,
-        selected = if (grade %in% c("FY1", "FY2")) "none" else NULL
+        selected = NULL
       )
     )
   })
   
-  observe({
-    selected <- input$flexible_pay_premia
-    grade <- input$grade
-    if (is.null(selected)) return()
-    # If "none" is selected with others, keep only "none"														 
-    if ("none" %in% selected && length(selected) > 1) {
-      updateCheckboxGroupInput(session, "flexible_pay_premia", selected = "none")
-      return()
+  
+  
+  output$ltft_hint_text <- renderUI({
+    if (!input$is_ltft || is.null(input$non_enhanced_hours) || is.null(input$enhanced_hours) ||
+        is.na(input$non_enhanced_hours) || is.na(input$enhanced_hours)) {
+      return(NULL)
     }
-    # For non-FY1/FY2 grades, enforce selection rule:												 
-    if (!(grade %in% c("FY1", "FY2"))) {
-      # Allow max 2, one of which must be "Academia" if both are selected																	 
-      if (length(selected) > 2) {
-        updateCheckboxGroupInput(session, "flexible_pay_premia", selected = selected[1:2])
-      } else if (!("Academia" %in% selected) && length(selected) > 1) {
-        updateCheckboxGroupInput(session, "flexible_pay_premia", selected = selected[1])
-      }
+    
+    basic_hours <- input$non_enhanced_hours - input$enhanced_hours
+    
+    if (basic_hours < 0) {
+      return(tags$div(style = "color: red;", "Enhanced hours cannot exceed total hours."))
+    }
+    
+    calculated_pct <- round((basic_hours / 40) * 100, 1)
+    tags$div(
+      style = "color: #0d6efd; font-size: 90%; margin-top: -10px;",
+      paste0("Hint: Your LTFT % should be approximately ", calculated_pct, "% based on your hours (", basic_hours, " basic hrs/wk).","\n","If you use a percentage that's too different, the result may be highly innacurate.")
+    )
+  })
+  
+  observe({
+    total_hours <- input$non_enhanced_hours
+    current_enhanced <- input$enhanced_hours
+    if (!is.null(total_hours) && !is.na(total_hours) && total_hours >= 0) {
+      new_enhanced <- min(current_enhanced, total_hours)
+      updateSliderInput(session, "enhanced_hours", max = total_hours, value = new_enhanced)
     }
   })
   
-	observeEvent(input$non_enhanced_hours, {
-		if (is.null(input$non_enhanced_hours) || is.na(input$non_enhanced_hours)) return()
-
-		max_val <- input$non_enhanced_hours
-		new_val <- min(input$enhanced_hours %||% 0, max_val)
-
-		updateSliderInput(session, "enhanced_hours", max = max_val, value = new_val)
-	})
+  observe({
+    total_hours <- input$non_enhanced_hours
+    if (!is.null(total_hours) && !is.na(total_hours) && total_hours > 0) {
+      updateSliderInput(session, "enhanced_hours",
+                        max = total_hours,
+                        label = paste0("How many of those ", total_hours, " hours are enhanced/OOH?"))
+    }
+  })
+  
+  
   
   observeEvent(input$calculate, {
     #inputs	
@@ -234,12 +249,20 @@ server <- function(input, output, session) {
              0)
     }
     
+    #select correct base pay
     base_salary <- pay_scales %>% filter(grade == input$grade) %>% pull(base_salary)
-    selected_premia <- sum(pay_premia %>% filter(type %in% input$flexible_pay_premia) %>% pull(f_premia))
+    #handle null for pay premia
+    selected_premia <- if (is.null(input$flexible_pay_premia)) {
+      0
+    } else {
+      sum(pay_premia$f_premia[pay_premia$type %in% input$flexible_pay_premia], na.rm = TRUE)
+    }
+    #london weight
     selected_weight <- if (input$is_London_weight) get_london_weighting(input$london_weighting) else 0
+    #ltft
     ltft_premia <- if (input$is_ltft) 1000 else 0
-	ltft_percentage <- if (input$is_ltft && !is.null(input$ltft_percentageA)) input$ltft_percentageA else 100
-	ltft_hours <- if (input$is_ltft && !is.null(input$ltft_hoursA) && input$ltft_hoursA > 0) input$ltft_hoursA else 40
+    ltft_percentage <- if (input$is_ltft && !is.null(input$ltft_percentageA)) input$ltft_percentageA else 100
+    ltft_hours <- if (input$is_ltft && !is.null(input$ltft_hoursA) && input$ltft_hoursA > 0) input$ltft_hoursA else 40
     
     ltft_multiplier <- ltft_percentage / 100
     pension_factor <- min(ltft_hours / 40, 1)
@@ -248,135 +271,160 @@ server <- function(input, output, session) {
     adj_premia <- selected_premia * ltft_multiplier
     adj_weight <- selected_weight * ltft_multiplier
     
-    #gross input (with null input check)
-	if (is.null(input$non_enhanced_hours) || is.null(input$enhanced_hours) ||
-		is.na(input$non_enhanced_hours) || is.na(input$enhanced_hours)) {
-		showNotification("Please enter your average total weekly hours and enhanced hours.", type = "error")
-		return()
-	}
-	basic_hours <- input$non_enhanced_hours - input$enhanced_hours	
-	
-			if (input$know_gross_income) {
-				if (is.null(input$gross_payA) || is.na(input$gross_payA)) {
-					showNotification("Please enter your gross pay.", type = "error")
-					return()
-				}
-				gross_pay <- input$gross_payA
-			} else {
-			
-			# Estimate based on rota
-			base_hourly <- base_salary / 40 / 52  # Assuming 40 hrs/wk, 52 weeks
-			enhanced_multiplier <- 1.37           # Enhanced = 37% uplift
-			non_enhanced_multiplier <- 1.00       # No uplift
-
-			# Calculate weekend supplement (with null input check))
-			if (is.null(input$weekend_freq) || is.na(input$weekend_freq) || input$weekend_freq < 1) {
-				showNotification("Please enter a valid Weekend Frequency (e.g. 5 for 1 in 5).", type = "error")
-				return()
-			}
-
-			if (input$is_ltft) {
-				if (is.null(input$ft_weekend_freq) || is.na(input$ft_weekend_freq) || input$ft_weekend_freq < 1) {
-					showNotification("Please enter a valid full-time Weekend Frequency.", type = "error")
-					return()
-				}
-			}
-
-			weekend_freq <- input$weekend_freq
-			ft_weekend_freq <- if (input$is_ltft) input$ft_weekend_freq else input$weekend_freq
-
-			# Safe division
-			weekend_freq_percent <- weekend_freq / ft_weekend_freq
-			
-			weekend_supplement <- function(weekend_freq, base_salary) {
-				if (weekend_freq <= 2) {
-					return(base_salary * 0.15)
-				} else if (weekend_freq <= 3) {
-					return(base_salary * 0.10)
-				} else if (weekend_freq <= 4) {
-					return(base_salary * 0.075)
-				} else if (weekend_freq <= 5) {
-					return(base_salary * 0.06)
-				} else if (weekend_freq <= 6) {
-					return(base_salary * 0.05)
-				} else if (weekend_freq <= 7) {
-					return(base_salary * 0.04)
-				} else if (weekend_freq <= 8) {
-					return(base_salary * 0.03)
-				} else {
-					return(0)
-				}
-			}
-			
-			weekend_pay <- weekend_supplement(ft_weekend_freq, base_salary)
-			adj_weekend_pay <- weekend_pay * weekend_freq_percent
-
-			#on call Allowance
-			if (input$is_on_call_allowance) {
-			on_call_allowance <- base_salary*0.08
-			} else { on_call_allowance <- 0
-			}
-			adj_on_call <-weekend_freq_percent * on_call_allowance
-
-			#enhanced + non enhanced pay
-			enhanced_pay <- input$enhanced_hours * base_hourly * enhanced_multiplier * 52
-			non_enhanced_pay <- basic_hours * base_hourly * non_enhanced_multiplier * 52
-
-			#gross
-			gross_pay <- enhanced_pay + non_enhanced_pay + adj_premia + adj_weight + ltft_premia + adj_weekend_pay + adj_on_call
-			}
-			
-		#Gross less OOH:
-			if (input$know_gross_income) {
-			OOH_pay <- gross_pay - (adj_grade + adj_premia + adj_weight + ltft_premia)
-			Gross_less_OOH <- gross_pay - OOH_pay
-			} else {OOH_pay <- enhanced_pay + adj_weekend_pay + adj_on_call
-					Gross_less_OOH <- gross_pay - OOH_pay
-			} 
-			
-	#Warn about human error
-	
-			#If Ltft percentage does not match basic hours
-			expected_basic_hours <- ltft_multiplier * 40
-			tolerance <- 2  # hours
-
-			if (input$is_ltft && !input$know_gross_income && abs(basic_hours - expected_basic_hours) > tolerance) {
-				showNotification("Warning: Your LTFT percentage and basic hours may not match. Please double-check your inputs.", type = "warning")
-			}
-			
-			#less than 40hrs, but not LTFT
-			if (!input$is_ltft && input$non_enhanced_hours < 40) {
-					showNotification("Warning: You do less than 40 hours per week, but you did not tick LTFT. Is this correct?", type = "warning")
-					return()
-				}
-			
-				
-			#input gross pay is less than (estimated minimum gross, using inputs)
-			if (gross_pay < Gross_less_OOH) {
-					showNotification("Warning: The total pay you entered was below the minimum expected - based on your London weighting, LTFT allowance, pay premia and base pay. Did you enter the correct gross income?", type = "warning")
-					return()
-				}
-			
-			#input hours are over 48 (with null input check)
-			if (!is.null(input$non_enhanced_hours) && !is.na(input$non_enhanced_hours) &&
-					input$non_enhanced_hours > 48) {
-					showNotification("Warning: The total of the enhanced + non enhanced hours you entered are greater than 48. The English contract only allows up to 56 hours if you have opted out of the Working Time Directive, otherwise the maximum is 48. Are your hours correct?", type = "warning")
-					return()
-				}
-			
+    # Uplift calcs
+    uplifted_grade <- ceiling(base_salary * 1.04 + 750)
+    grade_mult <- uplifted_grade / base_salary
+    
+    new_adj_grade <- uplifted_grade * ltft_multiplier
+    new_premia <- ceiling(selected_premia * 1.04) * ltft_multiplier
+    
+    # Initialise values
+    enhanced_pay <- 0
+    non_enhanced_pay <- adj_grade
+    adj_weekend_pay <- 0
+    adj_on_call <- 0
+    
+    # Default uplifted values (will be overwritten if gross is not known)
+    new_enhanced_pay <- enhanced_pay * grade_mult
+    new_non_enhanced_pay <- non_enhanced_pay * grade_mult
+    new_adj_weekend_pay <- adj_weekend_pay * grade_mult
+    new_adj_on_call <- adj_on_call * grade_mult
+    
+    # Input validation
+    if (is.null(input$non_enhanced_hours) || is.null(input$enhanced_hours) ||
+        is.na(input$non_enhanced_hours) || is.na(input$enhanced_hours)) {
+      showNotification("Please enter your average total weekly hours and enhanced hours.", type = "error")
+      return()
+    }
+    total_time <- input$non_enhanced_hours	
+    enhanced_time <- input$enhanced_hours
+    basic_hours <- total_time - enhanced_time
+    
+    if (input$know_gross_income) {
+      if (is.null(input$gross_payA) || is.na(input$gross_payA)) {
+        showNotification("Please enter your gross pay.", type = "error")
+        return()
+      }
+      gross_pay <- input$gross_payA
+    } else {
+      
+      # Estimate based on rota
+      base_hourly <- base_salary / 40 / 52
+      base_hourly_new <- uplifted_grade / 40 / 52
+      enhanced_multiplier <- 1.37
+      non_enhanced_multiplier <- 1.00
+      
+      # Weekend frequency validation
+      if (is.null(input$weekend_freq) || is.na(input$weekend_freq) || input$weekend_freq < 1) {
+        showNotification("Please enter a valid Weekend Frequency (e.g. 5 for 1 in 5).", type = "error")
+        return()
+      }
+      
+      if (input$is_ltft) {
+        if (is.null(input$ft_weekend_freq) || is.na(input$ft_weekend_freq) || input$ft_weekend_freq < 1) {
+          showNotification("Please enter a valid full-time Weekend Frequency.", type = "error")
+          return()
+        }
+      }
+      
+      weekend_freq <- input$weekend_freq
+      ft_weekend_freq <- if (input$is_ltft) input$ft_weekend_freq else input$weekend_freq
+      if (ft_weekend_freq > weekend_freq){
+        ft_weekend_freq <- weekend_freq
+      }
+      
+      weekend_freq_percent <- ft_weekend_freq / weekend_freq
+      
+      weekend_supplement <- function(freq, salary) {
+        if (freq <= 2) return(salary * 0.15)
+        if (freq <= 3) return(salary * 0.10)
+        if (freq <= 4) return(salary * 0.075)
+        if (freq <= 5) return(salary * 0.06)
+        if (freq <= 6) return(salary * 0.05)
+        if (freq <= 7) return(salary * 0.04)
+        if (freq <= 8) return(salary * 0.03)
+        return(0)
+      }
+      
+      weekend_pay <- weekend_supplement(ft_weekend_freq, base_salary)
+      adj_weekend_pay <- weekend_pay * weekend_freq_percent
+      
+      # On-call
+      on_call_allowance <- if (input$is_on_call_allowance) base_salary * 0.08 else 0
+      adj_on_call <- weekend_freq_percent * on_call_allowance
+      
+      # OOH Pay breakdown
+      enhanced_pa <- input$enhanced_hours * base_hourly * enhanced_multiplier * 52
+      non_enhanced_pa <- basic_hours * base_hourly * non_enhanced_multiplier * 52
+      enhanced_pay <- enhanced_pa * (0.37/1.37)
+      non_enhanced_pay <- non_enhanced_pa + enhanced_pa * (1/1.37)
+      
+      # Gross
+      gross_pay <- non_enhanced_pay + enhanced_pay + adj_weekend_pay + adj_on_call + adj_premia + adj_weight + ltft_premia 
+      
+      # ✅ Recalculate uplifted values using uplifted grade
+      new_enhanced_pa <- input$enhanced_hours * base_hourly_new * enhanced_multiplier * 52
+      new_non_enhanced_pa <- basic_hours * base_hourly_new * non_enhanced_multiplier * 52
+      new_enhanced_pay <- new_enhanced_pa * (0.37/1.37)
+      new_non_enhanced_pay <- new_non_enhanced_pa + new_enhanced_pa * (1/1.37)	
+      
+      new_adj_weekend_pay <- weekend_supplement(ft_weekend_freq, uplifted_grade) * weekend_freq_percent
+      new_on_call_allowance <- if (input$is_on_call_allowance) uplifted_grade * 0.08 else 0
+      new_adj_on_call <- weekend_freq_percent * new_on_call_allowance
+    }
+    
+    #Gross less OOH, and new_gross:
+    if (input$know_gross_income) {
+      OOH_pay <- gross_pay - (adj_grade + adj_premia + adj_weight + ltft_premia)
+      Gross_less_OOH <- gross_pay - OOH_pay
+      new_OOH <- OOH_pay * grade_mult
+      new_gross <- new_adj_grade + new_OOH + new_premia + ltft_premia + adj_weight
+    } else {OOH_pay <- non_enhanced_pay + enhanced_pay + adj_weekend_pay + adj_on_call - adj_grade #if user has been accurate, adj_grade should equal non_enhanced_pay
+    Gross_less_OOH <- gross_pay - OOH_pay
+    new_OOH <- new_non_enhanced_pay + new_enhanced_pay + new_adj_weekend_pay + new_adj_on_call - new_adj_grade #if user has been accurate, new_adj_grade should equal new_non_enhanced_pay
+    new_gross <- new_non_enhanced_pay + new_enhanced_pay + new_adj_weekend_pay + new_adj_on_call + new_premia + adj_weight + ltft_premia
+    } 
+    
+    #Warn about human error
+    
+    #If Ltft percentage does not match basic hours
+    expected_basic_hours <- ltft_multiplier * 40
+    tolerance <- 2  # hours
+    
+    if (input$is_ltft && !input$know_gross_income && abs(basic_hours - expected_basic_hours) > tolerance) {
+      showNotification("Warning: Your LTFT percentage and basic hours may not match. Please double-check your inputs. Results may be wrong.", type = "warning")
+    }
+    
+    #less than 40hrs, but not LTFT
+    if (!input$is_ltft && input$non_enhanced_hours < 40) {
+      showNotification("Warning: You do less than 40 hours per week, but you did not tick LTFT. Is this correct?", type = "warning")
+    }
+    
+    
+    #input gross pay is less than (estimated minimum gross, using inputs)
+    if (gross_pay < Gross_less_OOH) {
+      showNotification("Error: The total pay you entered was below the minimum expected - based on your London weighting, LTFT allowance, pay premia and base pay. Please enter the correct gross income", type = "Error")
+      return() #this line stops the calculations from proceeding
+    }
+    
+    #input hours are over 48 (with null input check)
+    if (!is.null(input$non_enhanced_hours) && !is.na(input$non_enhanced_hours) &&
+        input$non_enhanced_hours > 48) {
+      showNotification("Warning: The total of the enhanced + non enhanced hours you entered are greater than 48. If you have not opted out of the EWTD your hours should be 48 or less. If you have opted out, your hours should be 56 or less. Are your hours correct?", type = "warning")
+    }
+    
+    #if ltft weekend frequency is higher than ft weekend frequency
+    if (input$is_ltft && input$ft_weekend_freq > input$weekend_freq){
+      showNotification("Warning: You are LTFT and have stated you do more frequent weekends than your full time colleagues. Unfortunately I do not know the correct way to handle this info, so I am assuming I do not pro-rata this.", type = "warning")
+    }
+    
+    
     
     #Pension opt in/out		   
     pension_opt <- ifelse(!input$is_under_StatePensionAge || !input$is_opt_in_pension, 0, 1)																	  
     pensionable <- (base_salary * pension_factor) + adj_weight
     pension_base <- ifelse(pension_opt < 1, 0, pensionable)										 
     
-    #Uplift calcs				  
-    uplifted_grade <- ceiling(base_salary * 1.04 + 750)
-    new_adj_grade <- uplifted_grade * ltft_multiplier
-    new_premia <- ceiling(selected_premia * 1.04) * ltft_multiplier
-    grade_mult <- uplifted_grade / base_salary
-    new_OOH <- OOH_pay * grade_mult
-    new_gross <- new_adj_grade + new_OOH + new_premia + ltft_premia + adj_weight
     #New Pension calcs			   
     new_pensionable <- (uplifted_grade * pension_factor) + adj_weight
     new_pension_base <- ifelse(pension_opt < 1, 0, new_pensionable)
@@ -452,49 +500,49 @@ server <- function(input, output, session) {
                    (taxable_income - BASIC_BAND - HIGHER_BAND) * ADDITIONAL_RATE)
         }
       }
-
-	  else {
-    # Scotland tax bands
-    if (taxable_income <= SCOT_STARTER_BAND) {
-      return(taxable_income * SCOT_STARTER_RATE)
-    } else if (taxable_income <= SCOT_STARTER_BAND + SCOT_BASIC_BAND) {
-      return(
-        SCOT_STARTER_BAND * SCOT_STARTER_RATE +
-        (taxable_income - SCOT_STARTER_BAND) * SCOT_BASIC_RATE
-      )
-    } else if (taxable_income <= SCOT_STARTER_BAND + SCOT_BASIC_BAND + SCOT_INTERMEDIATE_BAND) {
-      return(
-        SCOT_STARTER_BAND * SCOT_STARTER_RATE +
-        SCOT_BASIC_BAND * SCOT_BASIC_RATE +
-        (taxable_income - SCOT_STARTER_BAND - SCOT_BASIC_BAND) * SCOT_INTERMEDIATE_RATE
-      )
-    } else if (taxable_income <= SCOT_STARTER_BAND + SCOT_BASIC_BAND + SCOT_INTERMEDIATE_BAND + SCOT_HIGHER_BAND) {
-      return(
-        SCOT_STARTER_BAND * SCOT_STARTER_RATE +
-        SCOT_BASIC_BAND * SCOT_BASIC_RATE +
-        SCOT_INTERMEDIATE_BAND * SCOT_INTERMEDIATE_RATE +
-        (taxable_income - SCOT_STARTER_BAND - SCOT_BASIC_BAND - SCOT_INTERMEDIATE_BAND) * SCOT_HIGHER_RATE
-      )
-    } else if (taxable_income <= SCOT_STARTER_BAND + SCOT_BASIC_BAND + SCOT_INTERMEDIATE_BAND + SCOT_HIGHER_BAND + SCOT_ADVANCED_BAND) {
-      return(
-        SCOT_STARTER_BAND * SCOT_STARTER_RATE +
-        SCOT_BASIC_BAND * SCOT_BASIC_RATE +
-        SCOT_INTERMEDIATE_BAND * SCOT_INTERMEDIATE_RATE +
-        SCOT_HIGHER_BAND * SCOT_HIGHER_RATE +
-        (taxable_income - SCOT_STARTER_BAND - SCOT_BASIC_BAND - SCOT_INTERMEDIATE_BAND - SCOT_HIGHER_BAND) * SCOT_ADVANCED_RATE
-      )
-    } else {
-      return(
-        SCOT_STARTER_BAND * SCOT_STARTER_RATE +
-        SCOT_BASIC_BAND * SCOT_BASIC_RATE +
-        SCOT_INTERMEDIATE_BAND * SCOT_INTERMEDIATE_RATE +
-        SCOT_HIGHER_BAND * SCOT_HIGHER_RATE +
-        SCOT_ADVANCED_BAND * SCOT_ADVANCED_RATE +
-        (taxable_income - SCOT_STARTER_BAND - SCOT_BASIC_BAND - SCOT_INTERMEDIATE_BAND - SCOT_HIGHER_BAND - SCOT_ADVANCED_BAND) * SCOT_TOP_RATE
-      )
+      
+      else {
+        # Scotland tax bands
+        if (taxable_income <= SCOT_STARTER_BAND) {
+          return(taxable_income * SCOT_STARTER_RATE)
+        } else if (taxable_income <= SCOT_STARTER_BAND + SCOT_BASIC_BAND) {
+          return(
+            SCOT_STARTER_BAND * SCOT_STARTER_RATE +
+              (taxable_income - SCOT_STARTER_BAND) * SCOT_BASIC_RATE
+          )
+        } else if (taxable_income <= SCOT_STARTER_BAND + SCOT_BASIC_BAND + SCOT_INTERMEDIATE_BAND) {
+          return(
+            SCOT_STARTER_BAND * SCOT_STARTER_RATE +
+              SCOT_BASIC_BAND * SCOT_BASIC_RATE +
+              (taxable_income - SCOT_STARTER_BAND - SCOT_BASIC_BAND) * SCOT_INTERMEDIATE_RATE
+          )
+        } else if (taxable_income <= SCOT_STARTER_BAND + SCOT_BASIC_BAND + SCOT_INTERMEDIATE_BAND + SCOT_HIGHER_BAND) {
+          return(
+            SCOT_STARTER_BAND * SCOT_STARTER_RATE +
+              SCOT_BASIC_BAND * SCOT_BASIC_RATE +
+              SCOT_INTERMEDIATE_BAND * SCOT_INTERMEDIATE_RATE +
+              (taxable_income - SCOT_STARTER_BAND - SCOT_BASIC_BAND - SCOT_INTERMEDIATE_BAND) * SCOT_HIGHER_RATE
+          )
+        } else if (taxable_income <= SCOT_STARTER_BAND + SCOT_BASIC_BAND + SCOT_INTERMEDIATE_BAND + SCOT_HIGHER_BAND + SCOT_ADVANCED_BAND) {
+          return(
+            SCOT_STARTER_BAND * SCOT_STARTER_RATE +
+              SCOT_BASIC_BAND * SCOT_BASIC_RATE +
+              SCOT_INTERMEDIATE_BAND * SCOT_INTERMEDIATE_RATE +
+              SCOT_HIGHER_BAND * SCOT_HIGHER_RATE +
+              (taxable_income - SCOT_STARTER_BAND - SCOT_BASIC_BAND - SCOT_INTERMEDIATE_BAND - SCOT_HIGHER_BAND) * SCOT_ADVANCED_RATE
+          )
+        } else {
+          return(
+            SCOT_STARTER_BAND * SCOT_STARTER_RATE +
+              SCOT_BASIC_BAND * SCOT_BASIC_RATE +
+              SCOT_INTERMEDIATE_BAND * SCOT_INTERMEDIATE_RATE +
+              SCOT_HIGHER_BAND * SCOT_HIGHER_RATE +
+              SCOT_ADVANCED_BAND * SCOT_ADVANCED_RATE +
+              (taxable_income - SCOT_STARTER_BAND - SCOT_BASIC_BAND - SCOT_INTERMEDIATE_BAND - SCOT_HIGHER_BAND - SCOT_ADVANCED_BAND) * SCOT_TOP_RATE
+          )
+        }
+      }
     }
-  }
-}
     #NI
     ni_calc <- function(gross) {
       if (gross <= NI_THRESHOLD) {
@@ -519,8 +567,8 @@ server <- function(input, output, session) {
     net_old <- adjGross - student_loan_old - income_tax_old - ni_old
     net_new <- new_adj_gross - student_loan_new - income_tax_new - ni_new
     
-    basic_uplift <- (new_adj_grade/adj_grade -1) *100
-    gross_uplift <- (new_adj_gross/adjGross -1) *100
+    basic_uplift <- (grade_mult -1) *100
+    gross_uplift <- (new_gross/gross_pay -1) *100
     net_uplift <- (net_new/net_old -1) *100
     
     pension_accrued_old <- pension_base / 54
@@ -528,13 +576,22 @@ server <- function(input, output, session) {
     
     # Rendered Output
     output$salary_output <- renderPrint({
-
+      
       cat("=== OLD Pay ===\n")
       cat("Gross Pay: £", formatC(gross_pay, format = "f", digits = 2),
           " (of which £", formatC(pensionable, format = "f", digits = 2), " is pensionable)\n\n", sep = "")
-      cat("Gross pay is made of:\n")
-      cat("   Basic pay: £", formatC(adj_grade, format = "f", digits = 2), "\n")  						
-      if (OOH_pay != 0) cat("   OOH Pay: £", formatC(OOH_pay, format = "f", digits = 2), "\n")
+      cat("Gross pay is made of:\n")  						
+      
+      if (!input$know_gross_income) {  # Show detailed OOH breakdown only if gross income wasn't entered
+        cat("   Regular pay for", total_time ," hours: £", formatC(non_enhanced_pay, format = "f", digits = 2), "\n")
+        if (enhanced_pay != 0) cat("   Of which,", enhanced_time," hours attract a 37% enhancement: £", formatC(enhanced_pay, format = "f", digits = 2), "\n")
+        if (adj_weekend_pay != 0) cat("   Weekend Allowance: £", formatC(adj_weekend_pay, format = "f", digits = 2), "\n")
+        if (adj_on_call != 0) cat("   On-call Availability: £", formatC(adj_on_call, format = "f", digits = 2), "\n")
+      } else {
+        cat("   Basic pay: £", formatC(adj_grade, format = "f", digits = 2), "\n")
+        if (OOH_pay != 0) cat("   OOH Pay: £", formatC(OOH_pay, format = "f", digits = 2), "\n")
+      }
+      
       if (adj_premia != 0) cat("   Pay Premia: £", formatC(adj_premia, format = "f", digits = 2), "\n")
       if (ltft_premia != 0) cat("   LTFT Allowance: £", formatC(ltft_premia, format = "f", digits = 2), "\n")
       if (adj_weight != 0) cat("   London Weighting: £", formatC(adj_weight, format = "f", digits = 2), "\n")
@@ -555,8 +612,17 @@ server <- function(input, output, session) {
       cat("Gross Pay: £", formatC(new_gross, format = "f", digits = 2),
           " (of which £", formatC(new_pensionable, format = "f", digits = 2), " is pensionable)\n\n", sep = "")
       cat("Gross pay is made of:\n")
-      cat("   Basic pay: £", formatC(new_adj_grade, format = "f", digits = 2), "\n")																				   
-      if (new_OOH != 0) cat("   OOH Pay (Uplifted): £", formatC(new_OOH, format = "f", digits = 2), "\n")
+      
+      if (!input$know_gross_income) {  # Show detailed OOH breakdown only if gross income wasn't entered
+        cat("   Regular pay for", total_time ," hours: £", formatC(new_non_enhanced_pay, format = "f", digits = 2), "\n")
+        if (new_enhanced_pay != 0) cat("   Of which,", enhanced_time," hours attract a 37% enhancement: £", formatC(new_enhanced_pay, format = "f", digits = 2), "\n")
+        if (new_adj_weekend_pay != 0) cat("   Weekend Allowance: £", formatC(new_adj_weekend_pay, format = "f", digits = 2), "\n")
+        if (new_adj_on_call != 0) cat("   On-call Availability: £", formatC(new_adj_on_call, format = "f", digits = 2), "\n")
+      } else {
+        cat("   Basic pay: £", formatC(new_adj_grade, format = "f", digits = 2), "\n")
+        if (OOH_pay != 0) cat("   OOH Pay: £", formatC(new_OOH, format = "f", digits = 2), "\n")
+      }
+      
       if (new_premia != 0) cat("   Pay Premia (Uplifted): £", formatC(new_premia, format = "f", digits = 2), "\n")
       if (ltft_premia != 0) cat("   LTFT Allowance: £", formatC(ltft_premia, format = "f", digits = 2), "\n")
       if (adj_weight != 0) cat("   London Weighting: £", formatC(adj_weight, format = "f", digits = 2), "\n")
@@ -567,7 +633,9 @@ server <- function(input, output, session) {
       cat("   NI: £", formatC(ni_new, format = "f", digits = 2), "\n\n")
       
       #cat("\n","test data, comment out - taxable pay", formatC((new_gross - new_pension_ded), format = "f", digits = 2), "\n\n")
-	  #cat("\n","test data, comment out - basic hours  ", basic_hours, "hrs, and ltftmult*40", ltft_multiplier*40,"\n\n")
+      #cat("\n","test data, comment out - basic hours  ", basic_hours, "hrs, and ltftmult*40", ltft_multiplier*40,"\n\n")
+      #cat("\n","test data, comment out - gross less ooh  ", Gross_less_OOH,"\n\")
+      #cat("\n","test data, comment out - gross less ooh + OOH  ", Gross_less_OOH + OOH_pay,"\n\")
       
       cat("Net Pay: £", formatC(net_new, format = "f", digits = 2), "\n")
       if (pension_accrued_new != 0) cat("Pension Accrued: £", formatC(pension_accrued_new, format = "f", digits = 2), "\n")
@@ -576,63 +644,63 @@ server <- function(input, output, session) {
       cat("Uplift to basic pay: ", round(basic_uplift,2), "%\n")																			  
       cat("Uplift to gross pay: ", round(gross_uplift,2), "%\n")
       cat("Uplift to net pay: ", round(net_uplift,2), "%\n")
-	  cat("Net Pay Difference: £", round(net_new - net_old), "\n\n")
+      cat("Net Pay Difference: £", round(net_new - net_old), "\n\n")
     })  # <-- This closes renderPrint
     
-	
-	#if pensionable pay is greater than gross pay
-	output$pension_warning <- renderUI({
-		if (pensionable > gross_pay || new_pensionable > new_gross) {
-			HTML(
-			'<div class="alert alert-warning" role="alert">
+    
+    #if pensionable pay is greater than gross pay
+    output$pension_warning <- renderUI({
+      if (pensionable > gross_pay || new_pensionable > new_gross) {
+        HTML(
+          '<div class="alert alert-warning" role="alert">
 				⚠️ <strong>Note:</strong> Your pensionable pay is higher than your gross pay.
 				Please read this <a href="https://www.westmidlandsdeanery.nhs.uk/support/less-than-full-time-training/less-than-full-time-training-guide/pensions" 
 				target="_blank" class="alert-link">LTFT Pension info</a>.
 			</div>'
-			)
-		} else {
-			NULL
-		}
-	}) # closes pension warning
-	
-	#barplot render
-		  output$barplot_output <- renderPlot({
-    net_values <- c(net_old, net_new)
-    deduction_values <- c(
-      pension_ded + student_loan_old + income_tax_old + ni_old,
-      new_pension_ded + student_loan_new + income_tax_new + ni_new
-    )
-
-    values_matrix <- rbind(Net = net_values, Deductions = deduction_values)
-
+        )
+      } else {
+        NULL
+      }
+    }) # closes pension warning
     
-	par(mgp = c(4, 0.5, 0))  # Moves the y-axis label further from tick labels
-	bp <- barplot(values_matrix,
-            col = c("steelblue", "tomato"),
-            names.arg = c("Pre-uplift", "Post-uplift"),
-            ylim = c(0, max(colSums(values_matrix)) * 1.1),
-            main = "Net Pay vs Deductions (Old vs New)",
-            ylab = "(£)",
-            legend.text = TRUE,
-            args.legend = list(x = "topright"),
-			yaxt = "n")
-			
-	# Add custom y-axis with comma formatting
-			y_ticks <- pretty(c(0, max(colSums(values_matrix)) * 1.1))
-			axis(2, at = y_ticks, labels = format(y_ticks, big.mark = ","), las = 1)
-  
-		# Add text labels on top of each bar segment
-			cumul_values <- apply(values_matrix, 2, cumsum)
-			for (i in 1:ncol(values_matrix)) {
-				for (j in 1:nrow(values_matrix)) {
-					height <- cumul_values[j, i]
-					label <- format(values_matrix[j, i], big.mark = ",")
-					text(x = bp[i], y = height - values_matrix[j, i]/2, labels = label, col = "white", cex = 0.9)
-				}
-			} # closes text value on bar segments
-		}) # closes barplot render
-
-	
+    #barplot render
+    output$barplot_output <- renderPlot({
+      net_values <- c(net_old, net_new)
+      deduction_values <- c(
+        pension_ded + student_loan_old + income_tax_old + ni_old,
+        new_pension_ded + student_loan_new + income_tax_new + ni_new
+      )
+      
+      values_matrix <- rbind(Net = net_values, Deductions = deduction_values)
+      
+      
+      par(mgp = c(4, 0.5, 0))  # Moves the y-axis label further from tick labels
+      bp <- barplot(values_matrix,
+                    col = c("steelblue", "tomato"),
+                    names.arg = c("Pre-uplift", "Post-uplift"),
+                    ylim = c(0, max(colSums(values_matrix)) * 1.1),
+                    main = "Net Pay vs Deductions (Old vs New)",
+                    ylab = "(£)",
+                    legend.text = TRUE,
+                    args.legend = list(x = "topright"),
+                    yaxt = "n")
+      
+      # Add custom y-axis with comma formatting
+      y_ticks <- pretty(c(0, max(colSums(values_matrix)) * 1.1))
+      axis(2, at = y_ticks, labels = format(y_ticks, big.mark = ","), las = 1)
+      
+      # Add text labels on top of each bar segment
+      cumul_values <- apply(values_matrix, 2, cumsum)
+      for (i in 1:ncol(values_matrix)) {
+        for (j in 1:nrow(values_matrix)) {
+          height <- cumul_values[j, i]
+          label <- format(values_matrix[j, i], big.mark = ",")
+          text(x = bp[i], y = height - values_matrix[j, i]/2, labels = label, col = "white", cex = 0.9)
+        }
+      } # closes text value on bar segments
+    }) # closes barplot render
+    
+    
   })  # <-- This closes observeEvent
   
 }  # <-- This closes server
