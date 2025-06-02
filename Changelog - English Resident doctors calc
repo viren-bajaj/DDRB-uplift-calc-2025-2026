@@ -37,3 +37,13 @@ added more null catching
 added a breakdown of what OOH pay is if you do not know your gross
 cleaned up some warnings
 changed the gross pay calculation (if gross not known) logic - no change in results, but it feels like the logic is more correct
+
+v1.1.2 - 
+changed the way OOH pay is presented if gross is not known - this was done to avoid confusion
+Essentialy pay in the gross not known scenario is presented as:
+  pay for X+Y hours is £W
+  of which Y hours attract a 37% enhancement of £Z
+This avoids weird confusion if someoen inputs LTFT data in a way that i haven't thought about, and reduces the need for me to handle edge cases
+
+v1.1.3
+fixed an error with how weekend allowance and NROC allownce were being handled - I had a fraction upside down, so LTFT was inverting its multiplier (should'be been less than 1, but error made it greater)
