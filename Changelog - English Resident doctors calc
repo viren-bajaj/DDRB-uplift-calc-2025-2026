@@ -45,5 +45,5 @@ Essentialy pay in the gross not known scenario is presented as:
   of which Y hours attract a 37% enhancement of £Z
 This avoids weird confusion if someoen inputs LTFT data in a way that i haven't thought about, and reduces the need for me to handle edge cases
 
-v1.1.3
-fixed an error with how weekend allowance and NROC allownce were being handled - I had a fraction upside down, so LTFT was inverting its multiplier (should'be been less than 1, but error made it greater)
+v1.1.3 -
+fixed an error with how weekend allowance and NROC allownce were being handled - I had a fraction upside down, so LTFT was inverting its multiplier (should've been less than 1, but error made it greater)
