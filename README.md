@@ -2,7 +2,7 @@ This will become a group of calculators designed to calculate changes in net and
 
 As of yet, the only calculator that has been mostly finished is the English resident doctors calculator (2016 contract).
 
-Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
+Live instance of most recent version Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
 
 To do:
 
