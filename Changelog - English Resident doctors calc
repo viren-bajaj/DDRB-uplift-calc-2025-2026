@@ -47,3 +47,22 @@ This avoids weird confusion if someoen inputs LTFT data in a way that i haven't 
 
 v1.1.3 -
 fixed an error with how weekend allowance and NROC allownce were being handled - I had a fraction upside down, so LTFT was inverting its multiplier (should've been less than 1, but error made it greater)
+
+v1.1.4 - 
+made changes in preparation for adding other country options (moved some stuff round and added a welsh pay data frame(this could be a non-english-pay data frame since all 3 other nations use some variant of the 2002 contract)) + corrected some spelling errors + added comments to explain what further changes need to be made in case I forget what I was doing or someone else wants to finish this project
+  
+
+# to do for 1.2.0 - if notEngland, need to override all the england pay inputs.
+		# need to pull in the 24/25 and 25/26 pay scale tables for Wales, Scotland and NI.
+		# need to figure out how to take the selected grade and increment from the tables, and how to reference the LTFT tables if required
+		# need to check if pay premia exist outside of England (will leave the option for adding them on if they don't in case they exist in the future)
+		# need to check if Welsh pay has the same LTFT and pension interaction as English pay. Does banded pay attract pension? + How does the fact FY1s have default 5% banding in Wales effect pension (is it based on the base 100% pay instead of the FY1's 105%?)?
+		# need to implement scottish/NI pension decutions/accrual
+
+v1.1.5
+updated todo list
+# added a welsh pay data frame - still need scottish and NI pay.
+		# calculated what LTFT and banding was (the published percentages but rounded up to the nearest integer. LTFT banding involves rounding for the LTFT pay and then rounding again for the banding)
+		# still need to check if pay premia exist outside of England (will leave the option for adding them on if they don't in case they exist in the future)
+		# Welsh pension deductions/contributions are based on the unbanded pay (this also means the 100% pay for F1 rather than 105% pay that unbanded F1s get). Pension deduction and contribution formulas are otherwise unchanged for wales
+		# need to implement scottish/NI pension decutions/accrual
