@@ -12,7 +12,7 @@ To do:
 2) Add scottish and northern irish pay (may exclude GPST in scotland due to confusing pay circular, same for NI)
 3) check Scot/NI pension schemes
 4) verify scot tax calc
-5) Check that GP trainees have acces to the same F5-9 Banding as non GPSTs in Wwales/Scot/NI
+5) Check that GP trainees have access to the same F5-9 Banding as non GPSTs in Wales/Scot/NI (assumption of this was made in v1.1.6)
 6) Make consultant calculators.
 
 Issues: Scottish taxes seem to be universally hard to calculate - I have checked 3 other websites including gov.uk, a building society, and one other doctor pay calculator, none of us agree on scottish taxes, and gov.uk is the one that agrees the least.
