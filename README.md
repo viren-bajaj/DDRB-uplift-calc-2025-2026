@@ -6,19 +6,14 @@ Live instance of most recent version Resident Doctors calculator - https://viren
 
 To do:
 
-~~1) Add the outer london and fringe options to london weighting~~
+
 
 1) account for locum pay without accidentally uplifting it - this is harder than it sounds because how do you account for a user who includes it in their gross vs separately
-
-~~2) add options for users who don't know their gross pay, but do know thier hours~~
-
-2) Add welsh, scottish and northern irish pay + banding as alternative pay structures.
-   
-~~3) Add the option to use scottish income taxes for english pay,~~
-
-~~5) Add rest-of-UK tax for scottish pay (income tax is determined by where you live, not where you work).~~ (kind of done by adding a toggle for scottish taxes)
-
-3) Make consultant calculators.
+2) Add scottish and northern irish pay (may exclude GPST in scotland due to confusing pay circular, same for NI)
+3) check Scot/NI pension schemes
+4) verify scot tax calc
+5) Check that GP trainees have acces to the same F5-9 Banding as non GPSTs in Wwales/Scot/NI
+6) Make consultant calculators.
 
 Issues: Scottish taxes seem to be universally hard to calculate - I have checked 3 other websites including gov.uk, a building society, and one other doctor pay calculator, none of us agree on scottish taxes, and gov.uk is the one that agrees the least.
 
