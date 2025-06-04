@@ -59,10 +59,26 @@ made changes in preparation for adding other country options (moved some stuff r
 		# need to check if Welsh pay has the same LTFT and pension interaction as English pay. Does banded pay attract pension? + How does the fact FY1s have default 5% banding in Wales effect pension (is it based on the base 100% pay instead of the FY1's 105%?)?
 		# need to implement scottish/NI pension decutions/accrual
 
-v1.1.5
+v1.1.5 - 
+updated band selection so it only shows relevant banding, removed an extraneous observe, added welsh pay data frame, added dummy data frames for Scotland/NI,
+wales only shows relevant increments - need to do so for scotland/NI
+
 updated todo list
-# added a welsh pay data frame - still need scottish and NI pay.
 		# calculated what LTFT and banding was (the published percentages but rounded up to the nearest integer. LTFT banding involves rounding for the LTFT pay and then rounding again for the banding)
-		# still need to check if pay premia exist outside of England (will leave the option for adding them on if they don't in case they exist in the future)
+		# checked GP trainees get 45% banding whilst in GP placements, need to see how it interacts with LTFT
 		# Welsh pension deductions/contributions are based on the unbanded pay (this also means the 100% pay for F1 rather than 105% pay that unbanded F1s get). Pension deduction and contribution formulas are otherwise unchanged for wales
 		# need to implement scottish/NI pension decutions/accrual
+
+notes and rants as of v1.1.5 -
+ 		#in NI and Scotland GP registrars get a 45% allowance (additional banding) - need to see if GP does this in Wales. Need to check how it ineracts with ltft. can't find the official documets from HEIW etc that include this 45% in Wales, but it's mentioned in this BMA document https://www.bma.org.uk/media/32qaaeer/junior-doctors-contract-in-wales-pay-journey.pdf
+			#why on earth are the scottish and welsh pay scales using increments going from 0 to n, whilst NI uses 1 to (n+1)? Why?
+			#why does scotland have differetn SPR and STR scales that differ only at increments 0 and 1, but are the same for increments 2-9? Is this just to frustrate someone who wants to work with the data? becuase it feels like it
+			#due to this i need a different data frame for each of Wales/Scotland/NI
+			# It turns out NI GPStR has a different base pay to NI SpR/StR
+			#The LTFT system outside England puts people on scales F5-f9 which act as 50%-90% mults to unbanded pay - unclear how this itneracts with GP 45% allowance in NI/Scot/wales
+			
+			#for scotland I'm going to pretend the pre-2005 arrangments for ltft don't exist, because they don't make snese in the pay circular. 
+			#why is it that the English contract TCS document is the only one that's actually legible with regards to pay?
+			#I give up with scotland - they have two tables for GP trainees - table 5a and 5b (https://www.publications.scot.nhs.uk/files/pcs2024-dd-01.pdf), but these tables contain payscales for GPStRs and GPspRs (and GPSHOs which as far as I'm aware no longer exist) and table 5a doesn't correspond to any other pay scales that seem to exist
+			
+				#the data for dental core trainees/DSHOs shouldn't be hard to handle, so I can include it (but i'll leave it for a v1.3.0 if requested). Curiously Scotland and Wales uses 0-6 for DCT/DHSO, but NI uses 1-6
