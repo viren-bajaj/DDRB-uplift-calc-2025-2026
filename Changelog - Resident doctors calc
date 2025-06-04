@@ -91,3 +91,7 @@ spelling
 
 assumed GP trainees can get F5-9 banding and assumed it as applied before GP 45% banding
 
+
+v1.1.7 - 
+commented out unnecesary constants, corrected a variable error, made wales work if you clicked calculate straight away (previously it was returning a salary of zero, but if you changed and unchanged any options it would return the corect salary)
+
