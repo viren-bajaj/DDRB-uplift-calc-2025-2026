@@ -75,10 +75,19 @@ notes and rants as of v1.1.5 -
 			#why does scotland have differetn SPR and STR scales that differ only at increments 0 and 1, but are the same for increments 2-9? Is this just to frustrate someone who wants to work with the data? becuase it feels like it
 			#due to this i need a different data frame for each of Wales/Scotland/NI
 			# It turns out NI GPStR has a different base pay to NI SpR/StR
-			#The LTFT system outside England puts people on scales F5-f9 which act as 50%-90% mults to unbanded pay - unclear how this itneracts with GP 45% allowance in NI/Scot/wales
+			
+			#The LTFT system outside England puts people on scales F5-f9 which act as 50%-90% mults to unbanded pay - unclear how this interacts with GP 45% allowance in NI/Scot/wales
 			
 			#for scotland I'm going to pretend the pre-2005 arrangments for ltft don't exist, because they don't make snese in the pay circular. 
 			#why is it that the English contract TCS document is the only one that's actually legible with regards to pay?
 			#I give up with scotland - they have two tables for GP trainees - table 5a and 5b (https://www.publications.scot.nhs.uk/files/pcs2024-dd-01.pdf), but these tables contain payscales for GPStRs and GPspRs (and GPSHOs which as far as I'm aware no longer exist) and table 5a doesn't correspond to any other pay scales that seem to exist
 			
 				#the data for dental core trainees/DSHOs shouldn't be hard to handle, so I can include it (but i'll leave it for a v1.3.0 if requested). Curiously Scotland and Wales uses 0-6 for DCT/DHSO, but NI uses 1-6
+
+v1.1.6 - 
+wales implemented
+warning for Scot/NI that prevents user from proceding as these are not implemented yet
+spelling
+
+assumed GP trainees can get F5-9 banding and assumed it as applied before GP 45% banding
+
