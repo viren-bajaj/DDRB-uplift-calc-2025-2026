@@ -2,11 +2,10 @@ This will become a group of calculators designed to calculate changes in net and
 
 As of yet, the only calculator that has been mostly finished is the English resident doctors calculator (2016 contract).
 
-Live instance of most recent version Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
+Live instance of the public version (1.1.7) Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
+Live instance of most current testing version (1.1.8) - https://virenb.shinyapps.io/testPayCalc/
 
 To do:
-
-
 
 1) account for locum pay without accidentally uplifting it - this is harder than it sounds because how do you account for a user who includes it in their gross vs separately
 2) Add scottish and northern irish pay (may exclude GPST in scotland due to confusing pay circular, same for NI)
