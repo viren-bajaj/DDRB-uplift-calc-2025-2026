@@ -1,4 +1,4 @@
-#1.1.8 - removed unnecesary comments, added weekend checkbox to remove confusing wording, added scrolling (needs to be tested on mobile), changed pay premia tooltip to a popover so it works on mobile
+#1.1.8 - removed unnecesary comments, added weekend checkbox to remove confusing wording, added scrolling (seems to work on mobile), changed pay premia tooltip to a popover so it works on mobile, added a link to report errors, updated Scot/NI warning
 
 library(shiny)
 library(bslib)
@@ -18,7 +18,8 @@ Wales_pay_scales <- data.frame(
 	wales_base_salary_old = c (33307,35324,37343,41073,43694,46312,43821,46438,50099,52314,54979,57650,60319,62989,65657,68330,41269,43904,46536,49170,51802,54436,57069),
 	wales_base_salary_new =c (35390,37487,39587,43466,46192,48915,46324,49046,52853,55157,57929,60706,63482,66259,69034,71814,43670,46411,49148,51887,54625,57364,60102)
 	)
-	
+
+#DDRB is not making April 2025 recs for Scotland	
 #Scotland_pay_scales <- data.frame(	
 #	grade_scotland = c("FY1","FY1","FY1","FY2","FY2","FY2","SpR","SpR","SpR","SpR","SpR","SpR","SpR","SpR","SpR","SpR","SHO/DSHO","SHO/DSHO","SHO/DSHO","SHO/DSHO","SHO/DSHO","SHO/DSHO","SHO/DSHO","StR","StR","StR","StR","StR","StR","StR","StR","StR","StR"),
 #	Scotland_pay_increment =c ("0","1","2","0","1","2","0","1","2","3","4","5","6","7","8","9","0","1","2","3","4","5","6","0","1","2","3","4","5","6","7","8","9"),
@@ -169,9 +170,12 @@ radioButtons(
 							condition = "input.is_ltft == true",
 							numericInput("ft_weekend_freq", "What is the Full-time Weekend Frequency for your rota? (e.g. 1 in 5 = enter 5).", value = 5, min = 1)
 						)),
-					checkboxInput("is_on_call_allowance", "Do you get an on-call allowance?", value = FALSE)
-    
-					
+					checkboxInput("is_on_call_allowance", "Do you get an on-call allowance?", value = FALSE),
+						conditionalPanel(
+						condition = "input.is_ltft == true && input.is_on_call_allowance == true",
+						numericInput("NROC_percent", "What percent of the non-resident on call rota do you do compared to your full time colleagues? (%)", value = 100, min = 0, max = 100, step = 0.1),
+						uiOutput("NROC_hint_text")  #Tells the user what the calculator thinks their LTFT percent should be
+						)
 					)
 			),
       
@@ -270,20 +274,23 @@ radioButtons(
 		numericInput("ltft_hoursA", "LTFT Total Hours (use 40 if Full time)", value = 40, min = 0, max = 56)
 		),
 	  
-      h6(strong("Banding Options")),
-		checkboxInput("gp_band", "Are you in a GP placement (as a GPST)? do not tick if F1/F2", value = FALSE),
+     h6(strong("Banding Options")),
+		conditionalPanel(
+			condition = "!( (input.nation != 'England') && (input.grades_wales == 'FY1/FHO1' || input.grades_wales == 'FY2/FHO2') )",
+			checkboxInput("gp_band", "If you are a GPST, are you currently on a GP placement? (If you get GP banding regardless of placement tick this box)", value = FALSE)
+		),
 			conditionalPanel(
 				condition = "input.gp_band == false",
-		checkboxInput("know_band", "Do you know your pay band? If not we'll assume no banding", value = TRUE),
-			conditionalPanel(
-				condition = "input.know_band == true",
-					        radioButtons(
-							"pay_band", "What's your band?",
-							choices = c("no band", "1C", "1B", "1A", "2B", "2A", "3","FC","FB","FA","GP"),
-							selected = "no band",
-							inline = TRUE
-					),				
-			)
+				checkboxInput("know_band", "Do you know your pay band? If not we'll assume no banding", value = TRUE),
+					conditionalPanel(
+						condition = "input.know_band == true",
+					       radioButtons(
+								"pay_band", "What's your band?",
+								choices = c("no band", "1C", "1B", "1A", "2B", "2A", "3","FC","FB","FA","GP"),
+								selected = "no band",
+								inline = TRUE
+							),				
+					)
 			)
 		),
 	  
@@ -314,7 +321,9 @@ radioButtons(
 		div(id = "results_section",  # ← This is the scroll target
 			verbatimTextOutput("salary_output"),
 			uiOutput("pension_warning"),
-			plotOutput("barplot_output")
+			plotOutput("barplot_output"),
+			uiOutput("feedback_message")
+			
 		)
     )
   )
@@ -337,9 +346,27 @@ server <- function(input, output, session) {
 		calculated_pct <- round((basic_hours / 40) * 100, 1)
 		tags$div(
 			style = "color: #0d6efd; font-size: 90%; margin-top: -10px;",
-			paste0("Hint: Your LTFT % should be approximately ", calculated_pct, "% based on your hours (", basic_hours, " basic hrs/wk).","\n","If you use a percentage that's too different, the result may be inaccurate.")
+			HTML(paste0("Hint: Your LTFT % should be approximately ", calculated_pct, 
+            "% based on your hours (", basic_hours, " basic hrs/wk).<br>",
+            "If you use a percentage that's too different, the result may be inaccurate."))
 		)
 	})
+
+	output$NROC_hint_text <- renderUI({
+			if (!input$is_ltft || !input$is_on_call_allowance || is.na(input$is_on_call_allowance)) {
+			return(NULL)
+		}
+
+		if ((input$is_ltft && input$is_on_call_allowance) && is.null(input$NROC_percent)) {
+			return(tags$div(style = "color: red;", "Please input the percentage of the non-resident on-call rota you do compared to your full time colleagues."))
+		}
+		tags$div(
+			style = "color: #0d6efd; font-size: 90%; margin-top: -10px;",
+			paste0("If you are LTFT this is likely less than 100%, but if you work the full NROC rota despite being LTFT please use 100%.")
+		)
+	})
+
+
 
 	observe({
 		total_hours <- input$non_enhanced_hours
@@ -416,6 +443,17 @@ server <- function(input, output, session) {
                        selected = choices[1])
 		}
 	})
+	#GP band reset if FY1/FY2
+	observe({
+		if (
+			(input$nation == "Wales" && input$grades_wales %in% c("FY1/FHO1", "FY2/FHO2")) ||
+			(input$nation == "Scotland" && input$grades_scot %in% c("FY1/FHO1", "FY2/FHO2")) ||
+			(input$nation == "Northern Ireland" && input$grades_ni %in% c("FY1/FHO1", "FY2/FHO2"))
+		) {
+			updateCheckboxInput(session, "gp_band", value = FALSE)
+		}
+	})
+
 	
 #GP band overrides LTFT banding, i think (but unclear how it interacts with the F5-F9 stuff), if GP box is ticked, this won't even appear
 	observeEvent(input$is_ltft, {
@@ -566,8 +604,12 @@ if (!is.null(input$nation) && input$nation == "England") {
 	adj_weekend_pay <- weekend_pay * weekend_freq_percent
 
 	# On-call
+	if(!input$is_ltft){
+		NROC_percent <-1
+	}	else {NROC_percent <- input$NROC_percent/100
+	}
 	on_call_allowance <- if (input$is_on_call_allowance) base_salary * 0.08 else 0
-	adj_on_call <- weekend_freq_percent * on_call_allowance
+	adj_on_call <- NROC_percent * on_call_allowance
 
 	# OOH Pay breakdown
 	enhanced_pa <- input$enhanced_hours * base_hourly * enhanced_multiplier * 52
@@ -638,13 +680,12 @@ if (!is.null(input$nation) && input$nation == "England") {
 
 #Do not allow NI or Scot to proceed
 			if (input$nation == "Scotland" || input$nation == "Northern Ireland") {
-				showNotification("Warning: Scotland and Northern Ireland are not implemented yet. Please use one of the other options.", type = "error") 
+				showNotification("Warning: Northern Ireland is not implemented yet, and the DDRB did not produce recommendations for Scotland (correct as of May 2025). Please use one of the other options.", type = "error") 
 				return()
 			}
 
-
-if (input$nation == "Wales") {				
 	#Change to welsh pay
+if (input$nation == "Wales") {				
 	wales_base_salary_new <- 0
 	wales_base_salary_old <- 0
 			# Map radio button to data frame format
@@ -747,12 +788,7 @@ band_percent = (band_mult-1) * 100
 		
 }
 	
-	#using the selected grade, only show the relevant pay increments (save the varaibles for Wales as gross_wales, gross_wales_new etc)
-	#set base_salary to whatever grade/increment implies, call it wales_base_salary and wales_uplifted_grade (the 25/26 uplift has laready been included in the data frame, but it is just 4%+750 rounded up for wales (it may end up being different for scotland, so the data frame contiaing both bits of data might just be easier - but it makes a 26/27 version more annoying)
-	#if LTFT multiply the gross figures above by the ltft_scale_mult and round up to the nearest integer
-	#Multiply the welsh gross by the relevant pay band and update the welsh gross. for full time users thats "no band","1C","1B","1A","2B","2A", OR "3". For LTFT users that's "no band", "FC","FB", OR "FA". should only show LTFT bands to someone who picked LTFT, and normal bands to those that didn't. For F1 grades, "no band" multiplies by 1.05, for all other grades it multiplies by 1.
-	#if LTFT ask for how many total hours on their work schedule and apply pension factor. If full time, pension factor is set to 1. Pension is calculated based on unbanded full time pay in the same way as english pay (for F1 unbanded pay does not include the 1.05 multiplier for the pension)
-	#If (input is Wales then){ gross_pay <- gross_wales, new_gross <- gross_wales_new} etc.
+	#add in change to NI or Scot
 	
 	
     
@@ -1109,6 +1145,15 @@ band_percent = (band_mult-1) * 100
       }
     ")  
   })
+  
+	output$feedback_message <- renderUI({
+		#req(input$calculate)  # This should make it render only after pressing Calculate
+		tags$p(
+			style = "font-size: 0.9em; color: #6c757d; margin-top: 20px;",
+			"This is a work in progress. If you have found an error, please let me know at ",
+			tags$a(href = "https://github.com/viren-bajaj/DDRB-uplift-calc-2025-2026/issues", target = "_blank", "my GitHub page.")
+		)
+	})
   
 }  # <-- This closes server
 
