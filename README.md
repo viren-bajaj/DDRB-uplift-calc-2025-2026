@@ -2,9 +2,9 @@ This will become a group of calculators designed to calculate changes in net and
 
 As of yet, the only calculator that has been mostly finished is the English resident doctors calculator (2016 contract).
 
-Live instance of the public version (1.1.7) Resident Doctors calculator - https://virenb.shinyapps.io/English_Resident_Drs_payuplift_calc_25-26/
+[Live instance of the public version (1.1.8) Resident Doctors calculator - ](https://virenb.shinyapps.io/Resident_Doctors_pay_uplift_calculator_DDRB_25-26/)
 
-Live instance of most current testing version (1.1.8) - https://virenb.shinyapps.io/testPayCalc/
+[Live instance of most current testing version (1.1.8) - ](https://virenb.shinyapps.io/testPayCalc/)
 
 To do:
 
