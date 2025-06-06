@@ -11,7 +11,7 @@ To do:
 1) account for locum pay without accidentally uplifting it - this is harder than it sounds because how do you account for a user who includes it in their gross vs separately
 2) Add scottish and northern irish pay (may exclude scotland an NI from live public versions due to confusing pay circular regarding GPST pay - once clarity is attained, this will be resolved) - soctland only to be added when they have a 2025 uplift announced
 4) check Scot/NI pension schemes
-5) verify scot tax calc (those living on the scottish side of the scottish border may be scottish tax payers despite being on the english contract - the same is true the other wway around) - add a pop over to explain this
+5) verify scot tax calc (those living on the scottish side of the scottish border may be scottish tax payers despite being on the english contract - the same is true the other way around) - add a pop over to explain this
 6) Check that GP trainees have access to the same F5-9 Banding as non GPSTs in Wales/Scot/NI (assumption of this was made in v1.1.6)
 7) Make consultant calculators.
 8) Consider adding in dentist pay because it looks very straightfoward to add for Wales (and probably simple for England)
