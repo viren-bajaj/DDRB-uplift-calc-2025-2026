@@ -101,3 +101,8 @@ removed the commented out constants,
 addeda "do you work weekends" checkbox, so the user doesn't have to worry about putting in 9 if they don't - this probably removes the confusion for LTFT users who may work 1-in-11 whilst their FT collegues do 1-in-4 (this LTFT user would get weekend allowance of 4/11 * FT allowance)
 changed pay premia tooltip to a popover so it works on mobile
 
+v1.1.8.1 - 
+fixed a crash that was accidentally introduced in 1.1.8, fixed tax error for post-pension salaries above 100k (previously I was applying tax to the loss of personal allowance incorrectly - I was applying the 48% rate to this in Scotland/45% rate everywhere else - it should've been 45% in scotland/40% everywhere else - I checked this against the government's own tax calculators (which actually appear somewhat out compared to the actual documented values))
+
+v1.1.8.2 - 
+got rid of the ability to pick Scotland or NI, replaced with fake  radio buttons - done in order to prevent errors occuring (none have accoured after 1.1.8.1, just wanted to be safe)
