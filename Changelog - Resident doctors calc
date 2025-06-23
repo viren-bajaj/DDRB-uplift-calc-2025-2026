@@ -106,3 +106,10 @@ fixed a crash that was accidentally introduced in 1.1.8, fixed tax error for pos
 
 v1.1.8.2 - 
 got rid of the ability to pick Scotland or NI, replaced with fake  radio buttons - done in order to prevent errors occuring (none have accoured after 1.1.8.1, just wanted to be safe)
+
+v1.1.8.3 -
+bug for 40hr week work schedule found  - fix implemented, but root cause needs to be assessed (halts due to gross pay error code). Fixed an issue where the pensionable pay > gross pay warning was coming up if pensionable=gross. Unclear why this was happening, but worked around it by comparing pensionable to [gross + 0.00001] - not a good solution
+
+v1.1.8.4 -
+(cause of previous bug bot identified)
+made app look pretier by changing the verbatim text ouput to a HTML ui output - so now text wraps and isnt all monospaced
